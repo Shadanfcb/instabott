@@ -1,12 +1,12 @@
-import requests, urllib
+import requests
+import urllib
 
 APP_ACCESS_TOKEN = '372728299.6be5ef5.da34ffe315894053818b404943c559ef'
 
 BASE_URL = 'https://api.instagram.com/v1/'
 
-'''
-Function declaration to get your own info
-'''
+
+# Function declaration to get your own info
 
 
 def self_info():
@@ -26,9 +26,7 @@ def self_info():
         print 'Status code other than 200 received!'
 
 
-'''
-Function declaration to get the ID of a user by username
-'''
+# Function declaration to get the ID of a user by username
 
 
 def get_user_id(insta_username):
@@ -46,9 +44,7 @@ def get_user_id(insta_username):
         exit()
 
 
-'''
-Function declaration to get the info of a user by username
-'''
+# Function declaration to get the info of a user by username
 
 
 def get_user_info(insta_username):
@@ -94,9 +90,7 @@ def get_own_post():
         print 'Status code other than 200 received!'
 
 
-'''
-Function declaration to get the recent post of a user by username
-'''
+# Function declaration to get the recent post of a user by username
 
 
 def get_user_post(insta_username):
@@ -123,12 +117,12 @@ def get_user_post(insta_username):
 def start_bot():
     while True:
         print '\n'
-        print 'Hey! Welcome to instaBot!'
-        print 'Here are your menu options:'
-        print "a.Get your own details\n"
-        print "b.Get details of a user by username\n"
-        print "c.Get your own recent post\n"
-        print "d.Get the recent post of a user by username\n"
+        print 'Welcome to instaBot :D!'
+        print 'You can choose from the following menu options:'
+        print "a.Show your own details\n"
+        print "b.Show the details of a user by username\n"
+        print "c.Show your own recent post\n"
+        print "d.Show the recent post of a user by username\n"
         # print "e.Get a list of people who have liked the recent post of a user\n"
         # print "f.Like the recent post of a user\n"
         # print "g.Get a list of comments on the recent post of a user\n"
@@ -166,5 +160,6 @@ def start_bot():
             exit()
         else:
             print "wrong choice"
+
 
 start_bot()
