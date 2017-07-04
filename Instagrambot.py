@@ -1,8 +1,6 @@
 import requests, urllib
 
 APP_ACCESS_TOKEN = '372728299.6be5ef5.da34ffe315894053818b404943c559ef'
-#Token Owner : AVinstaBot.main
-#Sandbox Users : AVinstaBot.test0, AVinstaBot.test1, AVinstaBot.test2...... AVinstaBot.test10
 
 BASE_URL = 'https://api.instagram.com/v1/'
 
