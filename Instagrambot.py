@@ -1,13 +1,36 @@
-import requests
-import urllib
+import requests, urllib
 
 APP_ACCESS_TOKEN = '372728299.6be5ef5.da34ffe315894053818b404943c559ef'
+#Token Owner : AVinstaBot.main
+#Sandbox Users : AVinstaBot.test0, AVinstaBot.test1, AVinstaBot.test2...... AVinstaBot.test10
+
 BASE_URL = 'https://api.instagram.com/v1/'
+
+'''
+Function declaration to get your own info
+'''
 
 
 def self_info():
-    
+    request_url = (BASE_URL + 'users/self/?access_token=%s') % (APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_info = requests.get(request_url).json()
+
+    if user_info['meta']['code'] == 200:
+        if len(user_info['data']):
+            print 'Username: %s' % (user_info['data']['username'])
+            print 'No. of followers: %s' % (user_info['data']['counts']['followed_by'])
+            print 'No. of people you are following: %s' % (user_info['data']['counts']['follows'])
+            print 'No. of posts: %s' % (user_info['data']['counts']['media'])
+        else:
+            print 'User does not exist!'
+    else:
         print 'Status code other than 200 received!'
+
+
+'''
+Function declaration to get the ID of a user by username
+'''
 
 
 def get_user_id(insta_username):
@@ -103,11 +126,11 @@ def start_bot():
     while True:
         print '\n'
         print 'Hey! Welcome to instaBot!'
-        print 'You can choose from the following menu options:'
-        print "a.Show your details\n"
-        print "b.Show the details of a user by their username\n"
-        print "c.Download and show your recent post\n"
-        print "d.Download and show the recent post of a user by their username\n"
+        print 'Here are your menu options:'
+        print "a.Get your own details\n"
+        print "b.Get details of a user by username\n"
+        print "c.Get your own recent post\n"
+        print "d.Get the recent post of a user by username\n"
         # print "e.Get a list of people who have liked the recent post of a user\n"
         # print "f.Like the recent post of a user\n"
         # print "g.Get a list of comments on the recent post of a user\n"
