@@ -1,12 +1,17 @@
 import requests
 import urllib
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
 
 APP_ACCESS_TOKEN = '372728299.6be5ef5.da34ffe315894053818b404943c559ef'
+#Token Owner : AVinstaBot.main
+#Sandbox Users : AVinstaBot.test0, AVinstaBot.test1, AVinstaBot.test2...... AVinstaBot.test10
 
 BASE_URL = 'https://api.instagram.com/v1/'
 
-
-# Function declaration to get your own info
+'''
+Function declaration to get your own info
+'''
 
 
 def self_info():
@@ -26,7 +31,9 @@ def self_info():
         print 'Status code other than 200 received!'
 
 
-# Function declaration to get the ID of a user by username
+'''
+Function declaration to get the ID of a user by username
+'''
 
 
 def get_user_id(insta_username):
@@ -44,7 +51,9 @@ def get_user_id(insta_username):
         exit()
 
 
-# Function declaration to get the info of a user by username
+'''
+Function declaration to get the info of a user by username
+'''
 
 
 def get_user_info(insta_username):
@@ -90,7 +99,9 @@ def get_own_post():
         print 'Status code other than 200 received!'
 
 
-# Function declaration to get the recent post of a user by username
+'''
+Function declaration to get the recent post of a user by username
+'''
 
 
 def get_user_post(insta_username):
@@ -113,21 +124,116 @@ def get_user_post(insta_username):
     else:
         print 'Status code other than 200 received!'
 
+'''
+Function declaration to get the ID of the recent post of a user by username
+'''
+
+def get_post_id(insta_username):
+    user_id = get_user_id(insta_username)
+    if user_id == None:
+        print 'User does not exist!'
+        exit()
+    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_media = requests.get(request_url).json()
+
+    if user_media['meta']['code'] == 200:
+        if len(user_media['data']):
+            return user_media['data'][0]['id']
+        else:
+            print 'There is no recent post of the user!'
+            exit()
+    else:
+        print 'Status code other than 200 received!'
+        exit()
+
+
+
+'''
+Function declaration to like the recent post of a user
+'''
+
+
+def like_a_post(insta_username):
+    media_id = get_post_id(insta_username)
+    request_url = (BASE_URL + 'media/%s/likes') % (media_id)
+    payload = {"access_token": APP_ACCESS_TOKEN}
+    print 'POST request url : %s' % (request_url)
+    post_a_like = requests.post(request_url, payload).json()
+    if post_a_like['meta']['code'] == 200:
+        print 'Like was successful!'
+    else:
+        print 'Your like was unsuccessful. Try again!'
+
+
+'''
+Function declaration to make a comment on the recent post of the user
+'''
+
+
+def post_a_comment(insta_username):
+    media_id = get_post_id(insta_username)
+    comment_text = raw_input("Your comment: ")
+    payload = {"access_token": APP_ACCESS_TOKEN, "text" : comment_text}
+    request_url = (BASE_URL + 'media/%s/comments') % (media_id)
+    print 'POST request url : %s' % (request_url)
+
+    make_comment = requests.post(request_url, payload).json()
+
+    if make_comment['meta']['code'] == 200:
+        print "Successfully added a new comment!"
+    else:
+        print "Unable to add comment. Try again!"
+
+'''
+Function declaration to make delete negative comments from the recent post
+'''
+
+def delete_negative_comment(insta_username):
+    media_id = get_post_id(insta_username)
+    request_url = (BASE_URL + 'media/%s/comments/?access_token=%s') % (media_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    comment_info = requests.get(request_url).json()
+
+    if comment_info['meta']['code'] == 200:
+        if len(comment_info['data']):
+            #Here's a naive implementation of how to delete the negative comments :)
+            for x in range(0, len(comment_info['data'])):
+                comment_id = comment_info['data'][x]['id']
+                comment_text = comment_info['data'][x]['text']
+                blob = TextBlob(comment_text, analyzer=NaiveBayesAnalyzer())
+                if (blob.sentiment.p_neg > blob.sentiment.p_pos):
+                    print 'Negative comment : %s' % (comment_text)
+                    delete_url = (BASE_URL + 'media/%s/comments/%s/?access_token=%s') % (media_id, comment_id, APP_ACCESS_TOKEN)
+                    print 'DELETE request url : %s' % (delete_url)
+                    delete_info = requests.delete(delete_url).json()
+
+                    if delete_info['meta']['code'] == 200:
+                        print 'Comment successfully deleted!\n'
+                    else:
+                        print 'Unable to delete comment!'
+                else:
+                    print 'Positive comment : %s\n' % (comment_text)
+        else:
+            print 'There are no existing comments on the post!'
+    else:
+        print 'Status code other than 200 received!'
+
 
 def start_bot():
     while True:
         print '\n'
-        print 'Welcome to instaBot :D!'
-        print 'You can choose from the following menu options:'
-        print "a.Show your own details\n"
-        print "b.Show the details of a user by username\n"
-        print "c.Show your own recent post\n"
-        print "d.Show the recent post of a user by username\n"
-        # print "e.Get a list of people who have liked the recent post of a user\n"
-        # print "f.Like the recent post of a user\n"
-        # print "g.Get a list of comments on the recent post of a user\n"
-        # print "h.Make a comment on the recent post of a user\n"
-        # print "i.Delete negative comments from the recent post of a user\n"
+        print 'Hey! Welcome to instaBot!'
+        print 'Here are your menu options:'
+        print "a.Get your own details\n"
+        print "b.Get details of a user by username\n"
+        print "c.Get your own recent post\n"
+        print "d.Get the recent post of a user by username\n"
+        print "e.Get a list of people who have liked the recent post of a user\n"
+        print "f.Like the recent post of a user\n"
+        print "g.Get a list of comments on the recent post of a user\n"
+        print "h.Make a comment on the recent post of a user\n"
+        print "i.Delete negative comments from the recent post of a user\n"
         print "j.Exit"
 
         choice = raw_input("Enter you choice: ")
@@ -141,25 +247,24 @@ def start_bot():
         elif choice == "d":
             insta_username = raw_input("Enter the username of the user: ")
             get_user_post(insta_username)
-        # elif choice=="e":
-        #    insta_username = raw_input("Enter the username of the user: ")
-        #    get_like_list(insta_username)
-        # elif choice=="f":
-        #    insta_username = raw_input("Enter the username of the user: ")
-        #    like_a_post(insta_username)
-        # elif choice=="g":
-        #    insta_username = raw_input("Enter the username of the user: ")
-        #    get_comment_list(insta_username)
-        # elif choice=="h":
-        #    insta_username = raw_input("Enter the username of the user: ")
-        #    make_a_comment(insta_username)
-        # elif choice=="i":
-        #    insta_username = raw_input("Enter the username of the user: ")
-        #    delete_negative_comment(insta_username)
+        elif choice=="e":
+           insta_username = raw_input("Enter the username of the user: ")
+           get_like_list(insta_username)
+        elif choice=="f":
+           insta_username = raw_input("Enter the username of the user: ")
+           like_a_post(insta_username)
+        elif choice=="g":
+           insta_username = raw_input("Enter the username of the user: ")
+           get_comment_list(insta_username)
+        elif choice=="h":
+           insta_username = raw_input("Enter the username of the user: ")
+           post_a_comment(insta_username)
+        elif choice=="i":
+           insta_username = raw_input("Enter the username of the user: ")
+           delete_negative_comment(insta_username)
         elif choice == "j":
             exit()
         else:
             print "wrong choice"
-
 
 start_bot()
