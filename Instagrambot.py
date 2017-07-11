@@ -1,61 +1,79 @@
-import requests,urllib
+import requests
+import urllib
+from textblob import TextBlob
+from textblob.sentiments import NaiveBayesAnalyzer
 
-ACCESS_TOKEN = "372728299.6be5ef5.da34ffe315894053818b404943c559ef"
+APP_ACCESS_TOKEN = '372728299.6be5ef5.da34ffe315894053818b404943c559ef'
 
-BASE_URL = "https://api.instagram.com/v1/"
+BASE_URL = 'https://api.instagram.com/v1/'
 
 
-def my_info():
+# defining the self info
+def self_info():
+    request_url = (BASE_URL + 'users/self/?access_token=%s') % (APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_info = requests.get(request_url).json()
 
-    request_url = BASE_URL + 'users/self/?access_token=%s' % ACCESS_TOKEN
-
-    my_info = requests.get(request_url).json()
-
-    if my_info['meta']['code'] == 200:
-        if len(my_info['data']):
-            print 'Username: %s' % (my_info['data']['username'])
-            print 'No. of followers: %s' % (my_info['data']['counts']['followed_by'])
-            print 'No. of people you are following: %s' % (my_info['data']['counts']['follows'])
-            print 'No. of posts: %s' % (my_info['data']['counts']['media'])
+    if user_info['meta']['code'] == 200:
+        if len(user_info['data']):
+            print 'Username: %s' % (user_info['data']['username'])
+            print 'No. of followers: %s' % (user_info['data']['counts']['followed_by'])
+            print 'No. of people you are following: %s' % (user_info['data']['counts']['follows'])
+            print 'No. of posts: %s' % (user_info['data']['counts']['media'])
         else:
-            print 'Please Check the name'
+            print 'User does not exist!'
     else:
-        print 'STATUS NOT OK'
+        print 'Status code other than 200 received!'
 
 
+#Function declaration to get the ID of a user by username
 
-def get_friend_id(insta_user):
-    request_url = (BASE_URL + 'users/search?q=%s&access_token=%s') % (insta_user, ACCESS_TOKEN)
-    friend_info = requests.get(request_url).json()
-    if friend_info['meta']['code'] == 200:
-        if len(friend_info['data']):
-            return friend_info['data'][0]['id']
+
+def get_user_id(insta_username):
+    request_url = (BASE_URL + 'users/search?q=%s&access_token=%s') % (insta_username, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_info = requests.get(request_url).json()
+
+    if user_info['meta']['code'] == 200:
+        if len(user_info['data']):
+            return user_info['data'][0]['id']
         else:
             return None
     else:
-        print 'STATUS NOT OK'
+        print 'Status code other than 200 received!'
+        exit()
 
 
-def get_friend_info(insta_user):
-    friend_id = get_friend_id(insta_user)
-    if friend_id == None:
+#Function declaration to get the info of a user by username
+
+
+def get_user_info(insta_username):
+    user_id = get_user_id(insta_username)
+    if user_id == None:
         print 'User does not exist!'
-    request_url = (BASE_URL + 'users/%s?access_token=%s') % (friend_id, ACCESS_TOKEN)
-    friend_info = requests.get(request_url).json()
+        exit()
+    request_url = (BASE_URL + 'users/%s?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_info = requests.get(request_url).json()
 
-    if friend_info['meta']['code'] == 200:
-        if len(friend_info['data']):
-            print 'Username: %s' % (friend_info['data']['username'])
-            print 'No. of followers: %s' % (friend_info['data']['counts']['followed_by'])
-            print 'No. of people you are following: %s' % (friend_info['data']['counts']['follows'])
-            print 'No. of posts: %s' % (friend_info['data']['counts']['media'])
+    if user_info['meta']['code'] == 200:
+        if len(user_info['data']):
+            print 'Username: %s' % (user_info['data']['username'])
+            print 'No. of followers: %s' % (user_info['data']['counts']['followed_by'])
+            print 'No. of people you are following: %s' % (user_info['data']['counts']['follows'])
+            print 'No. of posts: %s' % (user_info['data']['counts']['media'])
         else:
-            print 'oops! no data found'
+            print 'No data found for the user!'
     else:
-        print 'STATUS NOT OK'
+        print 'Status code other than 200 received!'
 
-def get_my_post():
-    request_url = (BASE_URL + 'users/self/media/recent/?access_token=%s') % ACCESS_TOKEN
+
+#Function declaration to get your recent post
+
+
+def get_own_post():
+    request_url = (BASE_URL + 'users/self/media/recent/?access_token=%s') % (APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
     own_media = requests.get(request_url).json()
 
     if own_media['meta']['code'] == 200:
@@ -63,120 +81,153 @@ def get_my_post():
             image_name = own_media['data'][0]['id'] + '.jpeg'
             image_url = own_media['data'][0]['images']['standard_resolution']['url']
             urllib.urlretrieve(image_url, image_name)
-            print 'Your image has been downloaded!'
+            print 'Image downloaded!'
         else:
             print 'Post does not exist!'
     else:
         print 'Status code other than 200 received!'
 
-def friend_media():
-    #first i need to search for the user and after that get's its id and store it's id.
-    friend_name=raw_input('enter the name of your frnd :')
-    url = (BASE_URL + 'users/search?q=%s&access_token=%s') % (friend_name, ACCESS_TOKEN)
-    friend_details = requests.get(url).json()
-    if friend_details['meta']['code'] == 200:
-        if len(friend_details['data']):
-            id = (friend_details['data'][0]['id'])
-            request_url=(BASE_URL+'users/%s/media/recent/?access_token=%s'%(id,ACCESS_TOKEN))
-            details_frnd=requests.get(request_url).json()
-            if len(details_frnd['data']):
-                image_name = details_frnd['data'][0]['id'] + '.jpeg'
-                image_url = details_frnd['data'][0]['images']['standard_resolution']['url']
-                urllib.urlretrieve(image_url, image_name)
-                print 'image has been downloaded'
 
-            else:
-                 print 'data does not exist'
+#Function declaration to get the recent post of a user by username
+
+
+def get_user_post(insta_username):
+    user_id = get_user_id(insta_username)
+    if user_id == None:
+        print 'User does not exist!'
+        exit()
+    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_media = requests.get(request_url).json()
+
+    if user_media['meta']['code'] == 200:
+        if len(user_media['data']):
+            image_name = user_media['data'][0]['id'] + '.jpeg'
+            image_url = user_media['data'][0]['images']['standard_resolution']['url']
+            urllib.urlretrieve(image_url, image_name)
+            print 'Image downloaded!'
         else:
-            print 'user not exist'
+            print 'Post does not exist!'
     else:
-        print 'status error occured'
+        print 'Status code other than 200 received!'
 
 
-def like_a_post():
-    name = raw_input('enter your friend name')
-    search_url = (BASE_URL + 'users/search?q=%s&access_token=%s') % (name, ACCESS_TOKEN)
-    friend_details=requests.get(search_url).json()
-    if friend_details['meta']['code'] == 200:
-        if len(friend_details['data']):
-            id = (friend_details['data'][0]['id'])
-            request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s' % (id, ACCESS_TOKEN))
-            post_details = requests.get(request_url).json()
-            if post_details['meta']['code']==200:
-                if len(post_details['data']):
-                    post_id=post_details['data'][0]['id']
-                    set_url=(BASE_URL+'media/%s/likes')%(post_id)
-                    payLoad={'access_token':ACCESS_TOKEN}
-                    post_like=requests.post(set_url,payLoad).json()
-                    if post_like['meta']['code']==200:
-                        print('Post liked')
-                    else:
-                        print 'Try again later'
+#Function declaration to get the ID of the recent post of a user by username
 
-                else:
-                    print 'Try again later'
 
-            else:
-                print 'STATUS NOT OK'
+def get_post_id(insta_username):
+    user_id = get_user_id(insta_username)
+    if user_id == None:
+        print 'The user does not exist!'
+        exit()
+    request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s') % (user_id, APP_ACCESS_TOKEN)
+    print 'GET request url : %s' % (request_url)
+    user_media = requests.get(request_url).json()
+
+    if user_media['meta']['code'] == 200:
+        if len(user_media['data']):
+            return user_media['data'][0]['id']
         else:
-            print 'wrong input name '
+            print 'No recent post of the user fpund!'
+            exit()
     else:
-        print 'STATUS NOT OK'
+        print 'Status code other than 200 received!'
+        exit()
 
 
-def post_a_comment():
-    name = raw_input('enter the name of the user :')
-    url = (BASE_URL + 'users/search?q=%s&access_token=%s') % (name, ACCESS_TOKEN)
-    friend_details = requests.get(url).json()
-    if friend_details['meta']['code'] == 200:
+#Function declaration to like the recent post of a user
 
-        if len(friend_details['data']):
 
-            id = (friend_details['data'][0]['id'])
-            request_url = (BASE_URL + 'users/%s/media/recent/?access_token=%s' % (id, ACCESS_TOKEN))
-            show_media_details = requests.get(request_url).json()
-            if show_media_details['meta']['code'] == 200:
+def like_a_post(insta_username):
+    media_id = get_post_id(insta_username)
+    request_url = (BASE_URL + 'media/%s/likes') % (media_id)
+    payload = {"access_token": APP_ACCESS_TOKEN}
+    print 'POST request url : %s' % (request_url)
+    post_a_like = requests.post(request_url, payload).json()
+    if post_a_like['meta']['code'] == 200:
+        print 'Post liked!'
+    else:
+        print 'Unable to like. Try again!'
 
-                if len(show_media_details['data']):
-                    media_id = show_media_details['data'][0]['id']
-                    set_url = (BASE_URL + 'media/%s/comments') % (media_id)
-                    comment_input = raw_input('enter your comment: ')
-                    comment_payLoad = {'access_token': ACCESS_TOKEN, 'text': comment_input}
-                    post_comment = requests.post(set_url, comment_payLoad).json()
-                    if post_comment['meta']['code'] == 200:
 
-                        print('Comment added successfully!')
-            else:
-                print 'STATUS NggOT OK'
+#Function declaration to make a comment on the recent post of the user
+
+
+def post_a_comment(insta_username):
+    media_id = get_post_id(insta_username)
+    comment_text = raw_input("Your comment: ")
+    payload = {"access_token": APP_ACCESS_TOKEN, "text": comment_text}
+    request_url = (BASE_URL + 'media/%s/comments') % (media_id)
+    print 'POST request url : %s' % (request_url)
+
+    make_comment = requests.post(request_url, payload).json()
+
+    if make_comment['meta']['code'] == 200:
+        print "Added a new comment successfully !"
+    else:
+        print "We were not able to add comment. Sorry, please try again!"
+
+
+# Function declaration to get the liked by user
+
+
+def liked_by_user(insta_username):
+    media_id = get_post_id(insta_username)
+    print "Get request URL:" + ((BASE_URL + "users/self/media/liked?access_token=%s") % (APP_ACCESS_TOKEN))
+    liked = requests.get((BASE_URL + "users/self/media/liked?access_token=%s") % (APP_ACCESS_TOKEN)).json()
+    print liked["data"][0]["id"]
+
+
+# Function declaration to get the comments
+
+def get_the_comments(insta_username):
+    media_id = get_post_id(insta_username)
+    print "Get request URL:" + ((BASE_URL + "media/%s/comments?access_token=%s") % (media_id, APP_ACCESS_TOKEN))
+    comments = requests.get((BASE_URL + "media/%s/comments?access_token=%s") % (media_id, APP_ACCESS_TOKEN)).json()
+    print comments["data"]
+
+
+def start_bot():
+    while True:
+        print '\n'
+        print 'Hello! Welcome to InstagramBot! :D'
+        print 'You can choose from the following menu options:'
+        print "a.Show your details\n"
+        print "b.Show the details of a user by username\n"
+        print "c.Show your own recent post\n"
+        print "d.Show users recent post\n"
+        print "e.Show the list of people who have liked the recent post of a user\n"
+        print "f.Like recent post of a user\n"
+        print "g.Show the list of comments on the recent post of a user\n"
+        print "h.Comment on the recent post of a user\n"
+        print "i.Exit"
+
+        choice = raw_input("Please enter you choice: ")
+        if choice == "a":
+            self_info()
+        elif choice == "b":
+            insta_username = raw_input("Enter username of the user: ")
+            get_user_info(insta_username)
+        elif choice == "c":
+            get_own_post()
+        elif choice == "d":
+            insta_username = raw_input("Enter username of the user: ")
+            get_user_post(insta_username)
+        elif choice == "e":
+            insta_username = raw_input("Enter username of the user: ")
+            liked_by_user(insta_username)
+        elif choice == "f":
+            insta_username = raw_input("Enter username of the user: ")
+            like_a_post(insta_username)
+        elif choice == "g":
+            insta_username = raw_input("Enter username of the user: ")
+            get_the_comments(insta_username)
+        elif choice == "h":
+            insta_username = raw_input("Enter username of the user: ")
+            post_a_comment(insta_username)
+        elif choice == "i":
+            exit()
         else:
-            print 'oops! no data found'
-    else:
-        print 'STATUS NOT OK '
+            print "wrong choice"
 
-
-def start_app():
-    print 'Hello There!'
-    print 'Welcome to Instagrambot'
-    print 'You can choose from the following menu options:'
-    print 'a. Look into your own account'
-    print 'b. Look into your friends account'
-    print 'c. Look at your recent media'
-    print 'd. Look at your friends recent media'
-    print 'e. Want to like your friends post?'
-    print 'f. Wish to comment on your friends picture? '
-
-    your_choice = raw_input("Enter your choice")
-    if your_choice == "a":
-        my_info()
-    if your_choice == "b":
-        insta_user = raw_input('enter the user name')
-        get_friend_info(insta_user)
-    if your_choice == "c":
-        get_my_post()
-    if your_choice == "d":
-        friend_media()
-    if your_choice == "e":
-        like_a_post()
-    if your_choice == "f":
-        post_a_comment()
-start_app()
+start_bot()
